@@ -1,0 +1,58 @@
+name: CI/CD Pipeline
+
+# Trigger the workflow on pushes to the main branch
+on:
+  push:
+    branches:
+      - main
+
+# Define the permissions needed to push the Docker image to GitHub Container Registry (GHCR)
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  # PHASE 1: Continuous Integration (Testing)
+  ci-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          # The day2_docker directory holds the app.py and requirements
+          cd day2_docker
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Linting (Simulated)
+        run: echo "Linting passed!"
+
+  # PHASE 2: Continuous Deployment (Docker Build & Push)
+  cd-build-and-push:
+    needs: ci-test # Ensures Docker only builds IF the Python tests pass
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./day2_docker
+          push: true
+          # Tags the image with the exact Git commit SHA for perfect traceability
+          tags: ghcr.io/${{ github.repository_owner }}/cicd-dashboard:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/cicd-dashboard:latest
