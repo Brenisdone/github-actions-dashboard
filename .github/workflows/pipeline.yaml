@@ -55,4 +55,6 @@ jobs:
           context: ./day2_docker
           push: true
           # Tags the image with the exact Git commit SHA for perfect traceability
-          tags: ghcr.io/${{ github.repository_owner }}/cicd-dashboard:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/cicd-dashboard:latest
+          tags: |
+            ghcr.io/brenisdone/cicd-dashboard:${{ github.sha }}
+            ghcr.io/brenisdone/cicd-dashboard:latest
